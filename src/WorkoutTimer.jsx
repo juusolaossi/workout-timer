@@ -313,6 +313,10 @@ export default function WorkoutTimer() {
     ? "Workout Complete!"
     : phase;
 
+  const setProgress = rounds
+    ? Math.min(100, (Number(currentRound) / Number(rounds)) * 100)
+    : 0;
+
   return (
     <div
       className={`min-h-screen flex items-center justify-center p-4 ${bgClass}`}
@@ -347,8 +351,16 @@ export default function WorkoutTimer() {
         </div>
 
         {isRunning && !isCountdown && (
-          <div className="text-center text-sm mb-4">
-            Set {currentRound} / {rounds}
+          <div className="mt-3 mb-4">
+            <div className="text-center text-xl font-bold tracking-wide">
+              SET {currentRound} <span className="font-normal text-base">OF</span> {rounds}
+            </div>
+            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/40">
+              <div
+                className="h-full rounded-full bg-white transition-all duration-300"
+                style={{ width: `${setProgress}%` }}
+              />
+            </div>
           </div>
         )}
 
@@ -433,15 +445,28 @@ export default function WorkoutTimer() {
               </label>
             </div>
 
-            <label className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-3 text-sm">
+            <div className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-3 text-sm">
               <span>Keep screen awake during workout</span>
-              <input
-                type="checkbox"
-                checked={keepScreenAwake}
-                onChange={(e) => setKeepScreenAwake(e.target.checked)}
-                className="h-5 w-5"
-              />
-            </label>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={keepScreenAwake}
+                aria-label="Keep screen awake during workout"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setKeepScreenAwake((value) => !value);
+                }}
+                className={`relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+                  keepScreenAwake ? "bg-green-500" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                    keepScreenAwake ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         )}
       </div>
