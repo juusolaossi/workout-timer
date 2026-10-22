@@ -259,6 +259,10 @@ export default function WorkoutTimer() {
   const displayText = isFinished ? "✓" : isCountdown ? String(Math.max(1, Math.ceil(remainingMs / 1000))) : formatMs(remainingMs);
   const phaseLabel = isPaused ? "Paused" : isCountdown ? "Get Ready" : isFinished ? "Workout Complete!" : phase;
 
+  const workPresets = [10, 15, 20, 30, 45, 60];
+  const restPresets = [10, 15, 30, 45, 60, 90];
+  const setPresets = [3, 5, 8, 10, 12, 15];
+
   return (
     <div
       className={`fixed inset-0 h-[100dvh] w-full overflow-hidden overscroll-none touch-none flex items-center justify-center p-4 ${bgClass}`}
@@ -304,9 +308,27 @@ export default function WorkoutTimer() {
         {isIdle && (
           <div className="mt-4 space-y-3">
             <div className="grid grid-cols-3 gap-2">
-              <label><div className="text-xs">Work (s)</div><input type="number" min={1} value={workSec === "" ? "" : workSec} onChange={(e) => setWorkSec(e.target.value === "" ? "" : +e.target.value)} onBlur={(e) => { if (e.target.value === "" || +e.target.value < 1) setWorkSec(1); }} className="w-full border rounded p-2" /></label>
-              <label><div className="text-xs">Rest (s)</div><input type="number" min={0} value={restSec === "" ? "" : restSec} onChange={(e) => setRestSec(e.target.value === "" ? "" : +e.target.value)} onBlur={(e) => { if (e.target.value === "" || +e.target.value < 0) setRestSec(0); }} className="w-full border rounded p-2" /></label>
-              <label><div className="text-xs">Sets</div><input type="number" min={1} value={rounds === "" ? "" : rounds} onChange={(e) => setRounds(e.target.value === "" ? "" : +e.target.value)} onBlur={(e) => { if (e.target.value === "" || +e.target.value < 1) setRounds(1); }} className="w-full border rounded p-2" /></label>
+              <label>
+                <div className="text-xs">Work (s)</div>
+                <input type="number" inputMode="numeric" min={1} value={workSec === "" ? "" : workSec} onChange={(e) => setWorkSec(e.target.value === "" ? "" : +e.target.value)} onBlur={(e) => { if (e.target.value === "" || +e.target.value < 1) setWorkSec(1); }} className="w-full border rounded p-2" />
+                <div className="mt-1 flex gap-1 overflow-x-auto pb-1">
+                  {workPresets.map((value) => <button key={value} type="button" onClick={(e) => { e.stopPropagation(); setWorkSec(value); }} className={`flex-shrink-0 rounded-full px-2 py-1 text-[11px] ${Number(workSec) === value ? "bg-green-500 text-white" : "bg-white/70 text-gray-700"}`}>{value}</button>)}
+                </div>
+              </label>
+              <label>
+                <div className="text-xs">Rest (s)</div>
+                <input type="number" inputMode="numeric" min={0} value={restSec === "" ? "" : restSec} onChange={(e) => setRestSec(e.target.value === "" ? "" : +e.target.value)} onBlur={(e) => { if (e.target.value === "" || +e.target.value < 0) setRestSec(0); }} className="w-full border rounded p-2" />
+                <div className="mt-1 flex gap-1 overflow-x-auto pb-1">
+                  {restPresets.map((value) => <button key={value} type="button" onClick={(e) => { e.stopPropagation(); setRestSec(value); }} className={`flex-shrink-0 rounded-full px-2 py-1 text-[11px] ${Number(restSec) === value ? "bg-green-500 text-white" : "bg-white/70 text-gray-700"}`}>{value}</button>)}
+                </div>
+              </label>
+              <label>
+                <div className="text-xs">Sets</div>
+                <input type="number" inputMode="numeric" min={1} value={rounds === "" ? "" : rounds} onChange={(e) => setRounds(e.target.value === "" ? "" : +e.target.value)} onBlur={(e) => { if (e.target.value === "" || +e.target.value < 1) setRounds(1); }} className="w-full border rounded p-2" />
+                <div className="mt-1 flex gap-1 overflow-x-auto pb-1">
+                  {setPresets.map((value) => <button key={value} type="button" onClick={(e) => { e.stopPropagation(); setRounds(value); }} className={`flex-shrink-0 rounded-full px-2 py-1 text-[11px] ${Number(rounds) === value ? "bg-green-500 text-white" : "bg-white/70 text-gray-700"}`}>{value}</button>)}
+                </div>
+              </label>
             </div>
 
             <div className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-3 text-sm">
