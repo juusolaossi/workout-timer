@@ -42,9 +42,10 @@ function useAudioEngine() {
 }
 
 export default function WorkoutTimer() {
-  const [workSec, setWorkSec] = useState(20);
-  const [restSec, setRestSec] = useState(40);
-  const [rounds, setRounds] = useState(5);
+  const [workSec, setWorkSec] = useState(15);
+  const [restSec, setRestSec] = useState(45);
+  const [rounds, setRounds] = useState(10);
+  const [keepScreenAwake, setKeepScreenAwake] = useState(true);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -55,6 +56,8 @@ export default function WorkoutTimer() {
   const startSettingsRef = useRef({ workSec, restSec, rounds });
   const lastTickRef = useRef(null);
   const lastBeepSecondRef = useRef(null);
+  const phaseEndTimeoutRef = useRef(null);
+  const wakeLockRef = useRef(null);
 
   const audio = useAudioEngine();
 
@@ -62,8 +65,72 @@ export default function WorkoutTimer() {
     startSettingsRef.current = { workSec, restSec, rounds };
   }, [workSec, restSec, rounds]);
 
+  // Keep the phone screen awake while a workout is active.
+  useEffect(() => {
+    if (!isRunning || isPaused || !keepScreenAwake || phase === "finished") return;
+
+    let cancelled = false;
+
+    async function requestWakeLock() {
+      if (!("wakeLock" in navigator)) return;
+      if (document.visibilityState !== "visible") return;
+      if (wakeLockRef.current) return;
+
+      try {
+        const wakeLock = await navigator.wakeLock.request("screen");
+        if (cancelled) {
+          await wakeLock.release();
+          return;
+        }
+        wakeLockRef.current = wakeLock;
+        wakeLock.addEventListener("release", () => {
+          wakeLockRef.current = null;
+        });
+      } catch (error) {
+        console.warn("Screen wake lock could not be enabled:", error);
+      }
+    }
+
+    requestWakeLock();
+
+    async function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        await requestWakeLock();
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isRunning, isPaused, keepScreenAwake, phase]);
+
+  async function releaseWakeLock() {
+    if (!wakeLockRef.current) return;
+
+    try {
+      await wakeLockRef.current.release();
+    } catch (error) {
+      console.warn("Screen wake lock could not be released:", error);
+    } finally {
+      wakeLockRef.current = null;
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (phaseEndTimeoutRef.current) {
+        clearTimeout(phaseEndTimeoutRef.current);
+      }
+      releaseWakeLock();
+    };
+  }, []);
+
   useEffect(() => {
     if (!isRunning || isPaused) return;
+
     const id = setInterval(() => {
       const now = performance.now();
       const delta = now - (lastTickRef.current || now);
@@ -73,30 +140,51 @@ export default function WorkoutTimer() {
         const next = Math.max(0, prev - delta);
         const sec = Math.ceil(next / 1000);
 
-        if (sec <= 3 && sec !== lastBeepSecondRef.current) {
-          lastBeepSecondRef.current = sec;
-          if (sec > 0) {
+        if (phase === "countdown") {
+          if (sec >= 1 && sec <= 5 && sec !== lastBeepSecondRef.current) {
+            lastBeepSecondRef.current = sec;
             audio.playBeep({ type: "short", frequency: 880 });
-          } else if (sec === 0) {
-            audio.playBeep({ type: "long", frequency: 1200 });
+          }
+        } else if ((phase === "work" || phase === "rest") && sec <= 3) {
+          if (sec !== lastBeepSecondRef.current) {
+            lastBeepSecondRef.current = sec;
+            if (sec > 0) {
+              audio.playBeep({ type: "short", frequency: 880 });
+            } else {
+              audio.playBeep({ type: "long", frequency: 1200 });
+            }
           }
         }
 
-        if (next <= 0) {
-          setTimeout(() => handlePhaseEnd(), 100);
+        if (next <= 0 && !phaseEndTimeoutRef.current) {
+          phaseEndTimeoutRef.current = setTimeout(() => {
+            phaseEndTimeoutRef.current = null;
+            handlePhaseEnd();
+          }, 100);
         }
 
         return next;
       });
     }, 200);
+
     return () => clearInterval(id);
   }, [isRunning, isPaused, phase]);
 
   function startTimer() {
     const s = startSettingsRef.current;
+    const safeWorkSec = Math.max(1, Number(s.workSec) || 1);
+    const safeRestSec = Math.max(0, Number(s.restSec) || 0);
+    const safeRounds = Math.max(1, Number(s.rounds) || 1);
+
+    startSettingsRef.current = {
+      workSec: safeWorkSec,
+      restSec: safeRestSec,
+      rounds: safeRounds,
+    };
+
     setCurrentRound(1);
-    setPhase("work");
-    setRemainingMs(s.workSec * 1000);
+    setPhase("countdown");
+    setRemainingMs(5000);
     setIsRunning(true);
     setIsPaused(false);
     lastTickRef.current = performance.now();
@@ -108,44 +196,70 @@ export default function WorkoutTimer() {
     const s = startSettingsRef.current;
     lastBeepSecondRef.current = null;
 
+    if (phase === "countdown") {
+      setPhase("work");
+      setRemainingMs(s.workSec * 1000);
+      lastTickRef.current = performance.now();
+      return;
+    }
+
     if (phase === "work") {
-      if (s.restSec > 0) {
+      // The final work set is the end of the workout. There is no final rest.
+      if (currentRound >= s.rounds) {
+        finishWorkout();
+      } else if (s.restSec > 0) {
         setPhase("rest");
         setRemainingMs(s.restSec * 1000);
-      } else if (currentRound >= s.rounds) {
-        stopTimer();
+        lastTickRef.current = performance.now();
       } else {
         setCurrentRound((c) => c + 1);
         setPhase("work");
         setRemainingMs(s.workSec * 1000);
+        lastTickRef.current = performance.now();
       }
-    } else if (phase === "rest") {
-      if (currentRound >= s.rounds) {
-        stopTimer();
-      } else {
-        setCurrentRound((c) => c + 1);
-        setPhase("work");
-        setRemainingMs(s.workSec * 1000);
-      }
+      return;
+    }
+
+    if (phase === "rest") {
+      setCurrentRound((c) => c + 1);
+      setPhase("work");
+      setRemainingMs(s.workSec * 1000);
+      lastTickRef.current = performance.now();
     }
   }
 
-  function stopTimer() {
+  function finishWorkout() {
+    setIsRunning(false);
+    setIsPaused(false);
+    setPhase("finished");
+    setRemainingMs(0);
+    lastBeepSecondRef.current = null;
+    releaseWakeLock();
+  }
+
+  function resetToDefault() {
     setIsRunning(false);
     setIsPaused(false);
     setPhase("idle");
     setRemainingMs(0);
     setCurrentRound(0);
     lastBeepSecondRef.current = null;
+    releaseWakeLock();
+  }
+
+  function stopTimer() {
+    resetToDefault();
   }
 
   function togglePause() {
     if (!isRunning) return;
+
     if (isPaused) {
       setIsPaused(false);
       lastTickRef.current = performance.now();
     } else {
       setIsPaused(true);
+      releaseWakeLock();
     }
   }
 
@@ -156,22 +270,48 @@ export default function WorkoutTimer() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   }
 
+  const isCountdown = phase === "countdown";
+  const isFinished = phase === "finished";
+  const isIdle = phase === "idle";
+
   const totalPhaseTime =
     phase === "work"
-      ? workSec * 1000
+      ? Number(workSec || 1) * 1000
       : phase === "rest"
-      ? restSec * 1000
+      ? Number(restSec || 1) * 1000
+      : isCountdown
+      ? 5000
       : 1;
 
-  const progress = 1 - remainingMs / totalPhaseTime;
+  const progress = isFinished || isIdle
+    ? 0
+    : Math.min(1, Math.max(0, 1 - remainingMs / totalPhaseTime));
 
   const bgClass = isPaused
     ? "bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500"
+    : isCountdown
+    ? "bg-gradient-to-br from-blue-200 via-blue-300 to-blue-500"
+    : isFinished
+    ? "bg-gradient-to-br from-green-300 via-green-400 to-green-500"
     : phase === "work"
     ? "bg-gradient-to-br from-green-400 via-green-500 to-green-600"
     : phase === "rest"
     ? "bg-gradient-to-br from-yellow-200 via-yellow-400 to-orange-500"
     : "bg-gradient-to-br from-white via-gray-100 to-gray-200";
+
+  const displayText = isFinished
+    ? "✓"
+    : isCountdown
+    ? String(Math.max(1, Math.ceil(remainingMs / 1000)))
+    : formatMs(remainingMs);
+
+  const phaseLabel = isPaused
+    ? "Paused"
+    : isCountdown
+    ? "Get Ready"
+    : isFinished
+    ? "Workout Complete!"
+    : phase;
 
   return (
     <div
@@ -181,37 +321,57 @@ export default function WorkoutTimer() {
       <div className="w-full max-w-xs">
         <CircularProgressbar
           value={progress * 100}
-          text={formatMs(remainingMs)}
+          text={displayText}
           styles={buildStyles({
             pathColor:
               isPaused
-                ? "#6b7280" // gray for paused
+                ? "#6b7280"
+                : isCountdown
+                ? "#2563eb"
+                : isFinished
+                ? "#16a34a"
                 : phase === "work"
-                ? "#16a34a" // green
+                ? "#16a34a"
                 : phase === "rest"
-                ? "#f59e0b" // yellow/orange
-                : "#9ca3af", // gray for idle
+                ? "#f59e0b"
+                : "#9ca3af",
             textColor: "#000",
             trailColor: "rgba(255,255,255,0.5)",
             strokeLinecap: "round",
             pathTransition: progress === 0 ? "none" : "stroke-dashoffset 0.5s ease 0s",
           })}
         />
-        <div className="text-center text-lg mt-4 capitalize">
-          {isPaused ? "Paused" : phase}
+
+        <div className="text-center text-lg mt-4 capitalize font-semibold">
+          {phaseLabel}
         </div>
-        {isRunning && (
+
+        {isRunning && !isCountdown && (
           <div className="text-center text-sm mb-4">
-            Round {currentRound} / {rounds}
+            Set {currentRound} / {rounds}
           </div>
         )}
+
+        {isCountdown && (
+          <div className="text-center text-sm mb-4 mt-1">
+            Workout starts in {Math.max(1, Math.ceil(remainingMs / 1000))}
+          </div>
+        )}
+
         <div className="flex gap-2 mt-4">
-          {!isRunning ? (
+          {isIdle ? (
             <button
               onClick={startTimer}
               className="flex-1 py-3 bg-green-500 text-white rounded-lg font-semibold"
             >
               Start
+            </button>
+          ) : isFinished ? (
+            <button
+              onClick={resetToDefault}
+              className="flex-1 py-3 bg-green-600 text-white rounded-lg font-semibold"
+            >
+              Done
             </button>
           ) : (
             <button
@@ -223,51 +383,63 @@ export default function WorkoutTimer() {
           )}
         </div>
 
-        {!isRunning && (
-          <div className="grid grid-cols-3 gap-2 mt-4">
-            <label>
-              <div className="text-xs">Work (s)</div>
+        {isIdle && (
+          <div className="mt-4 space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              <label>
+                <div className="text-xs">Work (s)</div>
+                <input
+                  type="number"
+                  min={1}
+                  value={workSec === "" ? "" : workSec}
+                  onChange={(e) => setWorkSec(e.target.value === "" ? "" : +e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value === "" || +e.target.value < 1) {
+                      setWorkSec(1);
+                    }
+                  }}
+                  className="w-full border rounded p-2"
+                />
+              </label>
+              <label>
+                <div className="text-xs">Rest (s)</div>
+                <input
+                  type="number"
+                  min={0}
+                  value={restSec === "" ? "" : restSec}
+                  onChange={(e) => setRestSec(e.target.value === "" ? "" : +e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value === "" || +e.target.value < 0) {
+                      setRestSec(0);
+                    }
+                  }}
+                  className="w-full border rounded p-2"
+                />
+              </label>
+              <label>
+                <div className="text-xs">Sets</div>
+                <input
+                  type="number"
+                  min={1}
+                  value={rounds === "" ? "" : rounds}
+                  onChange={(e) => setRounds(e.target.value === "" ? "" : +e.target.value)}
+                  onBlur={(e) => {
+                    if (e.target.value === "" || +e.target.value < 1) {
+                      setRounds(1);
+                    }
+                  }}
+                  className="w-full border rounded p-2"
+                />
+              </label>
+            </div>
+
+            <label className="flex items-center justify-between rounded-lg bg-white/70 px-3 py-3 text-sm">
+              <span>Keep screen awake during workout</span>
               <input
-                type="number"
-                min={1}
-                value={workSec === "" ? "" : workSec}
-                onChange={(e) => setWorkSec(e.target.value === "" ? "" : +e.target.value)}
-                onBlur={(e) => {
-                  if (e.target.value === "" || +e.target.value < 1) {
-                    setWorkSec(1); // fallback minimum
-                  }
-                }}
-                className="w-full border rounded p-2"
-              />
-            </label>
-            <label>
-              <div className="text-xs">Rest (s)</div>
-              <input
-                type="number"
-                min={0}
-                value={restSec === "" ? "" : restSec}
-                onChange={(e) => setRestSec(e.target.value === "" ? "" : +e.target.value)}
-                onBlur={(e) => {
-                  if (e.target.value === "" || +e.target.value < 1) {
-                    setRestSec(1); // fallback minimum
-                  }
-                }}
-                className="w-full border rounded p-2"
-              />
-            </label>
-            <label>
-              <div className="text-xs">Rounds</div>
-              <input
-                type="number"
-                min={1}
-                value={rounds === "" ? "" : rounds}
-                onChange={(e) => setRounds(e.target.value === "" ? "" : +e.target.value)}
-                onBlur={(e) => {
-                  if (e.target.value === "" || +e.target.value < 1) {
-                    setRounds(1); // fallback minimum
-                  }
-                }}
-                className="w-full border rounded p-2"
+                type="checkbox"
+                checked={keepScreenAwake}
+                onChange={(e) => setKeepScreenAwake(e.target.checked)}
+                className="h-5 w-5"
               />
             </label>
           </div>
