@@ -141,9 +141,14 @@ export default function WorkoutTimer() {
         const sec = Math.ceil(next / 1000);
 
         if (phase === "countdown") {
-          if (sec >= 1 && sec <= 5 && sec !== lastBeepSecondRef.current) {
+          // Countdown: three regular beeps, then a higher-pitched final beep.
+          if (sec >= 1 && sec <= 3 && sec !== lastBeepSecondRef.current) {
             lastBeepSecondRef.current = sec;
             audio.playBeep({ type: "short", frequency: 880 });
+          }
+          if (next <= 0 && lastBeepSecondRef.current !== 0) {
+            lastBeepSecondRef.current = 0;
+            audio.playBeep({ type: "long", frequency: 1200 });
           }
         } else if ((phase === "work" || phase === "rest") && sec <= 3) {
           if (sec !== lastBeepSecondRef.current) {
@@ -204,7 +209,6 @@ export default function WorkoutTimer() {
     }
 
     if (phase === "work") {
-      // The final work set is the end of the workout. There is no final rest.
       if (currentRound >= s.rounds) {
         finishWorkout();
       } else if (s.restSec > 0) {
@@ -406,9 +410,7 @@ export default function WorkoutTimer() {
                   value={workSec === "" ? "" : workSec}
                   onChange={(e) => setWorkSec(e.target.value === "" ? "" : +e.target.value)}
                   onBlur={(e) => {
-                    if (e.target.value === "" || +e.target.value < 1) {
-                      setWorkSec(1);
-                    }
+                    if (e.target.value === "" || +e.target.value < 1) setWorkSec(1);
                   }}
                   className="w-full border rounded p-2"
                 />
@@ -421,9 +423,7 @@ export default function WorkoutTimer() {
                   value={restSec === "" ? "" : restSec}
                   onChange={(e) => setRestSec(e.target.value === "" ? "" : +e.target.value)}
                   onBlur={(e) => {
-                    if (e.target.value === "" || +e.target.value < 0) {
-                      setRestSec(0);
-                    }
+                    if (e.target.value === "" || +e.target.value < 0) setRestSec(0);
                   }}
                   className="w-full border rounded p-2"
                 />
@@ -436,9 +436,7 @@ export default function WorkoutTimer() {
                   value={rounds === "" ? "" : rounds}
                   onChange={(e) => setRounds(e.target.value === "" ? "" : +e.target.value)}
                   onBlur={(e) => {
-                    if (e.target.value === "" || +e.target.value < 1) {
-                      setRounds(1);
-                    }
+                    if (e.target.value === "" || +e.target.value < 1) setRounds(1);
                   }}
                   className="w-full border rounded p-2"
                 />
