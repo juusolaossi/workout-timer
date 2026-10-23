@@ -65,7 +65,10 @@ export default function WorkoutTimer() {
     };
   }, [run]);
 
-  useWakeLock(settings.keepScreenAwake && ticking);
+  // Keep the screen awake for the entire active workout, including the
+  // GET READY countdown, pauses, and the finished screen. It is released
+  // when the workout is stopped/done. The setup screen remains idle.
+  useWakeLock(settings.keepScreenAwake && run !== null);
 
   function start() {
     // Audio may only be started from a tap, so unlock it here.
