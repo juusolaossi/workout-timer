@@ -21,7 +21,7 @@ export default function ProgressRing({ value, color, phaseKey, children }) {
           strokeDasharray={CIRCUMFERENCE}
           strokeDashoffset={CIRCUMFERENCE * (1 - value)}
           opacity={value > 0 ? 1 : 0}
-          style={{ transition: "stroke-dashoffset 0.1s linear, stroke 0.3s" }}
+          style={{ transition: "stroke 0.3s" }}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">{children}</div>
