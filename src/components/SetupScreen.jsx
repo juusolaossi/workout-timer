@@ -11,8 +11,8 @@ export default function SetupScreen({ settings, onChange, onStart }) {
   const totalTime = formatTime(workoutDurationMs(settings));
 
   return (
-    <div className="fixed inset-0 h-[100dvh] overflow-y-auto overscroll-none bg-gradient-to-br from-white via-gray-100 to-gray-200">
-      <div className="mx-auto flex min-h-full max-w-md flex-col gap-3 px-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
+    <div className="fixed inset-0 h-[100dvh] overflow-hidden overscroll-none bg-gradient-to-br from-white via-gray-100 to-gray-200">
+      <div className="mx-auto flex h-full max-w-md flex-col gap-3 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
         <h1 className="font-display text-4xl leading-none tracking-wide text-slate-900">Workout timer</h1>
 
         <SettingCard settingKey="workSec" label="Work" unit="sec" accent="work" presets={WORK_PRESETS} value={settings.workSec} onChange={update("workSec")} />
@@ -34,7 +34,7 @@ export default function SetupScreen({ settings, onChange, onStart }) {
         </div>
 
         {/* Start stays at the bottom of the screen, within thumb reach. */}
-        <div className="sticky bottom-0 mt-auto -mx-4 bg-gradient-to-t from-gray-200 via-gray-200/95 to-transparent px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="mt-auto -mx-4 bg-gradient-to-t from-gray-200 via-gray-200/95 to-transparent px-4 pt-4">
           <p className="mb-2 text-center text-sm text-slate-600">
             {settings.sets} {settings.sets === 1 ? "set" : "sets"} · <span className="font-semibold text-slate-800">{totalTime}</span> total
           </p>
