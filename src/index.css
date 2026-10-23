@@ -1,1 +1,15 @@
+@import "@fontsource/bebas-neue";
+@import "@fontsource-variable/inter";
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Bebas Neue: tall, all-caps display font for numbers and headings. */
+  --font-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+}
+
+html,
+body {
+  @apply bg-gray-100 font-sans text-slate-900 antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
