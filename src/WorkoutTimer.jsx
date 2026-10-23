@@ -19,12 +19,20 @@ export default function WorkoutTimer() {
   const finished = progress?.finished ?? false;
   const ticking = run !== null && !paused && !finished;
 
-  // Redraw the clock while running. The time shown is always computed from
-  // timestamps, so a slow or skipped tick never makes the timer drift.
+  // Redraw the clock on every animation frame while running. The displayed
+  // time is still derived from timestamps, so a dropped frame never makes
+  // the timer drift. requestAnimationFrame keeps the progress ring smooth.
   useEffect(() => {
     if (!ticking) return;
-    const id = setInterval(() => setNow(performance.now()), 100);
-    return () => clearInterval(id);
+
+    let frameId;
+    const tick = (timestamp) => {
+      setNow(timestamp);
+      frameId = requestAnimationFrame(tick);
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
   }, [ticking]);
 
   // Schedule every remaining beep of the workout whenever it starts or resumes.
