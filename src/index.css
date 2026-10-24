@@ -2,14 +2,85 @@
 @import "@fontsource-variable/inter";
 @import "tailwindcss";
 
-@theme {
+/*
+  Toe Hook brand tokens (from the Toe Hook design system).
+  Light values here, dark values below; components use the Tailwind
+  colours defined in @theme, which point at these variables.
+*/
+:root {
+  --th-chalk: #f3f4f1;
+  --th-chalk-raised: #ffffff;
+  --th-line: #d9ddd8;
+  --th-granite: #15191c;
+  --th-granite-muted: #586067;
+  --th-send: #22c55e;
+  --th-send-ink: #137a3c;
+  --th-on-send: #0d1f13;
+  --th-rest: #f5a524;
+  --th-rest-ink: #9a5b00;
+  --th-on-rest: #1f1500;
+  --th-ready: #4f8cff;
+  --th-on-ready: #0b1530;
+  --th-pause: #a9b0b5;
+  --th-on-pause: #15191c;
+  --th-stop: #d7383d;
+  --th-on-stop: #ffffff;
+  --th-shadow-card: 0 1px 2px #15191c14;
+  --th-shadow-start: 0 10px 24px -6px #22c55e66;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --th-chalk: #121517;
+    --th-chalk-raised: #1b1f22;
+    --th-line: #2c3236;
+    --th-granite: #eef1ed;
+    --th-granite-muted: #a1a9ae;
+    --th-send: #3ddc84;
+    --th-send-ink: #5ee39a;
+    --th-rest: #ffb84d;
+    --th-rest-ink: #ffc46b;
+    --th-ready: #6ea0ff;
+    --th-pause: #4b5358;
+    --th-on-pause: #eef1ed;
+    --th-stop: #f0575c;
+    --th-on-stop: #1a0607;
+    --th-shadow-card: 0 1px 2px #00000080;
+    --th-shadow-start: 0 10px 24px -6px #00000099;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   /* Bebas Neue: tall, all-caps display font for numbers and headings. */
   --font-display: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+
+  --color-chalk: var(--th-chalk);
+  --color-chalk-raised: var(--th-chalk-raised);
+  --color-line: var(--th-line);
+  --color-granite: var(--th-granite);
+  --color-granite-muted: var(--th-granite-muted);
+  --color-send: var(--th-send);
+  --color-send-ink: var(--th-send-ink);
+  --color-on-send: var(--th-on-send);
+  --color-rest: var(--th-rest);
+  --color-rest-ink: var(--th-rest-ink);
+  --color-on-rest: var(--th-on-rest);
+  --color-ready: var(--th-ready);
+  --color-on-ready: var(--th-on-ready);
+  --color-pause: var(--th-pause);
+  --color-on-pause: var(--th-on-pause);
+  --color-stop: var(--th-stop);
+  --color-on-stop: var(--th-on-stop);
+
+  --shadow-card: var(--th-shadow-card);
+  --shadow-start: var(--th-shadow-start);
 }
 
 html,
 body {
-  @apply bg-gray-100 font-sans text-slate-900 antialiased;
+  @apply bg-chalk font-sans text-granite antialiased;
   -webkit-tap-highlight-color: transparent;
 }
