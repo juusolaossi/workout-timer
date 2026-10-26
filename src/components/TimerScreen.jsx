@@ -1,5 +1,6 @@
 import { formatTime } from "../timer/engine";
 import ProgressRing from "./ProgressRing";
+import SetDots from "./SetDots";
 
 // One flat Toe Hook phase colour fills the screen. Text, digits, the ring and
 // its track all use the matching "on-" colour. Class names are written out in
@@ -57,9 +58,8 @@ export default function TimerScreen({ progress, paused, totalSets, onTogglePause
           <div className="text-center font-display text-3xl tracking-wide">
             Set {currentSet} <span className="text-xl opacity-70">of</span> {totalSets}
           </div>
-          <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full">
-            <div className="absolute inset-0 bg-current opacity-[0.22]" />
-            <div className="absolute inset-y-0 left-0 rounded-full bg-current transition-all duration-300" style={{ width: `${(currentSet / totalSets) * 100}%` }} />
+          <div className="mt-2">
+            <SetDots set={currentSet} totalSets={totalSets} phaseType={phase?.type} paused={paused} />
           </div>
         </div>
 
