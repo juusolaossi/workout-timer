@@ -23,6 +23,10 @@ export default function TimerScreen({ progress, paused, totalSets, onTogglePause
   const label = paused ? "Paused" : finished ? "Sent" : isCountdown ? "Chalk up" : phase.type;
   const display = isCountdown ? String(countdownSeconds) : formatTime(remainingMs);
 
+  // Set progress shows during work and rest, including while paused.
+  const showSets = !finished && !isCountdown;
+  const currentSet = phase?.set ?? totalSets;
+
   let hint = null;
   if (paused) hint = "Tap to resume";
   else if (finished) hint = `${totalSets} ${totalSets === 1 ? "set" : "sets"} done`;
@@ -46,19 +50,20 @@ export default function TimerScreen({ progress, paused, totalSets, onTogglePause
 
         <div className="mt-5 font-display text-4xl leading-none tracking-[0.08em] uppercase">{label}</div>
 
-        {!finished && !isCountdown && !paused && (
-          <div className="mt-3 w-full">
-            <div className="text-center font-display text-3xl tracking-wide">
-              Set {phase.set} <span className="text-xl opacity-70">of</span> {totalSets}
-            </div>
-            <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full">
-              <div className="absolute inset-0 bg-current opacity-[0.22]" />
-              <div className="absolute inset-y-0 left-0 rounded-full bg-current transition-all duration-300" style={{ width: `${(phase.set / totalSets) * 100}%` }} />
-            </div>
+        {/* Set progress and the hint line always take up their space, even when
+            hidden, so nothing on the screen moves when you pause, resume or
+            change phase. */}
+        <div className={`mt-3 w-full ${showSets ? "" : "invisible"}`} aria-hidden={!showSets}>
+          <div className="text-center font-display text-3xl tracking-wide">
+            Set {currentSet} <span className="text-xl opacity-70">of</span> {totalSets}
           </div>
-        )}
+          <div className="relative mt-2 h-2 w-full overflow-hidden rounded-full">
+            <div className="absolute inset-0 bg-current opacity-[0.22]" />
+            <div className="absolute inset-y-0 left-0 rounded-full bg-current transition-all duration-300" style={{ width: `${(currentSet / totalSets) * 100}%` }} />
+          </div>
+        </div>
 
-        {hint && <div className="mt-2 text-sm font-medium">{hint}</div>}
+        <div className="mt-2 h-5 text-sm leading-5 font-medium">{hint ?? "\u00a0"}</div>
 
         <div className="mt-8 w-full">
           {finished ? (
