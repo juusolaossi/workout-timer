@@ -1,8 +1,10 @@
-# Toe Hook Timer
+# hook timer
 
-An interval timer for climbers and anyone who trains in sets. It is the first product of **Toe Hook**, a climbing and outdoors brand that will later include other products, merch and apps. Built for phones at the gym: big numbers, one tap to pause, the screen stays awake, colour tells you the phase.
+An interval timer for climbers and anyone who trains in sets. It is the first product of **hook** (always lowercase; called Toe Hook until November 2026), a climbing and outdoors brand that will later include other products, merch and apps. Built for phones at the gym: big numbers, one tap to pause, the screen stays awake, colour tells you the phase.
 
-Live: https://toe-hook-workout-timer.netlify.app/
+Live: https://toe-hook-workout-timer.netlify.app/ (the Netlify site still has the old name)
+
+**Current work:** `docs/redesign-brief.md` describes the redesign to build next: the rename to hook, a layout that fits every phone, the timer without the ring, saved workouts and the installable app. Read it before starting, and check its "Decisions" section with the owner.
 
 ## Commands
 
@@ -24,16 +26,17 @@ Run `npm test`, `npm run lint` and `npm run build` before calling a change done.
 - `src/components/SetupScreen.jsx` – the idle screen: work, rest and sets cards, keep-awake switch, Start.
 - `src/components/TimerScreen.jsx` – the running, paused and finished screen. Tap anywhere pauses or resumes.
 - `src/components/SetDots.jsx` – set progress under the phase label.
-- `src/index.css` – Toe Hook colour tokens as CSS variables (light and dark), exposed to Tailwind as colours like `bg-send` and `text-on-rest`.
+- `src/index.css` – hook colour tokens as CSS variables (light and dark), exposed to Tailwind as colours like `bg-send` and `text-on-rest`.
 
 ## Rules for changes
 
 - **Follow the brand.** Read `docs/brand.md` before any visual or copy change. Use the Tailwind brand colours (`chalk`, `granite`, `send`, `rest`, `ready`, `pause`, `stop` and their `on-` and `-ink` variants), never raw Tailwind palette colours like `green-500` or hex values in components.
 - **The layout must not jump.** Elements on the timer screen keep their position when pausing, resuming or changing phase. Reserve space for anything that appears or disappears (use `invisible`, not conditional rendering).
-- **Mobile first, iPhone especially.** The app is used from the iPhone home screen. Check safe areas, no unwanted scrolling, numeric keypad for inputs, touch targets of at least 44px.
+- **Write the name right.** hook is always lowercase and never set in Bebas Neue (`font-display`), which has no lowercase. Use Inter, weight 800.
+- **Mobile first, every modern phone.** The app is used from the home screen on iPhone and Android. Nothing may be clipped at any size from 320 × 568 up: screens scroll when they must, and the timer scales with the screen. Check safe areas, numeric keypad for inputs, touch targets of at least 44px.
 - **Keep timer logic in the engine.** New timing behaviour goes in `engine.js` with tests, not in components.
 - **Respect reduced motion.** Any animation needs a `prefers-reduced-motion` fallback.
-- **The owner tests on a real iPhone.** After a change, say what to check on the phone.
+- **The owner tests on real phones** (an iPhone, and Samsung phones via friends). After a change, say what to check on the phone.
 
 ## Workflow
 

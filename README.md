@@ -1,6 +1,6 @@
-# Workout Timer
+# hook timer
 
-A simple interval timer for work/rest sets, built for use on a phone at the gym.
+A simple interval timer for work/rest sets, built for use on a phone at the gym. The first product of hook, a climbing and outdoors brand.
 
 Live: https://toe-hook-workout-timer.netlify.app/
 
