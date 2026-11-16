@@ -1,14 +1,20 @@
-# Toe Hook brand guide (for the timer app)
+# hook brand guide (for the timer app)
 
-The full brand book lives in the Toe Hook design system on Claude. This file is the part the app needs.
+The full guide is the owner's hook brand book on Claude, with the hook design system behind it. This file is the part the app needs.
 
 ## The brand
 
-Toe Hook is a climbing and outdoors brand: modern, accessible, non-invasive, nature and sustainability driven. It started because every timer app on the store had poor design, broken behaviour, ads everywhere or pushy subscriptions. Toe Hook is the opposite of that.
+hook is a climbing and outdoors brand: modern, accessible, non-invasive, nature and sustainability driven. It started because every timer app on the store had poor design, broken behaviour, ads everywhere or pushy subscriptions. hook is the opposite of that. The brand was called Toe Hook until November 2026.
 
 - **Tagline:** Hang on.
 - **Promise in every product:** no clutter, no ads in the way, no pushy subscriptions.
-- **Portfolio:** Toe Hook is the parent brand; this timer is its first product (Toe Hook Timer). Products are named "Toe Hook" plus a plain descriptor.
+- **Portfolio:** hook is the parent brand; this timer is its first product, hook timer.
+
+## The name
+
+- **Always lowercase: hook.** Also at the start of a sentence, in headings and in the app. Never Hook, HOOK or Toe Hook.
+- **Never set the name in Bebas Neue** (`font-display`). Bebas Neue only has capital letters, so it would show HOOK. Set it in Inter, weight 800, `letter-spacing: -0.03em`, or use the wordmark.
+- Products are hook plus a plain lowercase word: hook timer.
 
 ## Voice
 
@@ -23,7 +29,7 @@ Like a good belay partner: short, calm, encouraging, never shouty.
 
 | Moment | Text |
 | --- | --- |
-| App title | Toe Hook |
+| App name | hook (page title: hook timer) |
 | Countdown label | Chalk up |
 | Countdown helper | First set in 3 |
 | Work / Rest labels | Work / Rest |
@@ -50,7 +56,7 @@ Tokens are defined in `src/index.css` (light and dark) and used as Tailwind colo
 | `pause` | #a9b0b5 | #4b5358 | Paused screen |
 | `stop` | #d7383d | #f0575c | Stop button only, never a phase |
 
-Each fill has an `on-` colour for text, digits and rings on top of it (`on-send`, `on-rest`, `on-ready`, `on-pause`, `on-stop`). On a phase screen everything (digits, ring, ring track, labels, set dots) uses that phase's `on-` colour; faint parts are the same colour at 22–25% opacity.
+Each fill has an `on-` colour for text, digits and dots on top of it (`on-send`, `on-rest`, `on-ready`, `on-pause`, `on-stop`). On a phase screen everything (digits, labels, set dots) uses that phase's `on-` colour; faint parts are the same colour at about 25% opacity.
 
 ### Phase screens
 
@@ -67,12 +73,13 @@ Phase screens are flat fills: no gradients, no shadows. Colour is never the only
 ## Type
 
 - **Bebas Neue** (display): timer digits, phase labels, set count, titles, button labels. Tabular figures for anything that counts.
-- **Inter** (text): anything read as a sentence: helper lines, settings copy, totals.
+- **Inter** (text): anything read as a sentence: helper lines, settings copy, totals. Also the name hook.
 - Never a sentence in Bebas Neue; never the timer in Inter.
 
 ## Shape
 
-- Rings are the signature: the progress ring starts at 12 o'clock and fills clockwise, thick stroke, round caps, a faint track in the same colour.
+- Big numbers are the signature: the time left is the largest thing on screen, with nothing decorating it. The progress ring is being removed (see `docs/redesign-brief.md`).
+- Dots count: one dot per set, also used on merch and as the full stop in headlines.
 - Rounded corners: 24px for setting cards and Start, 16px for Stop and Done, 8px for preset chips.
 - Shadows only on setting cards and the Start button.
 
